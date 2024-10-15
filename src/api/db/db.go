@@ -28,12 +28,13 @@ func New() (*DB, error) {
 	opts := options.Client().ApplyURI(u).SetServerAPIOptions(serverAPI)
 
 	// * Setze die maxilae Ladedauer auf 10 Sekunden
-	ctx, cancel_func := context.WithTimeout(context.Background(), 10*time.Second)
-	cancel_func()
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+
 	c, e := mongo.Connect(ctx, opts)
 	if e != nil {
 		return nil, e
 	}
+
 	// * Verbinde Mit den Collectiones
 	userCollection := c.Database("LunaDB").Collection("User")
 	teamCollection := c.Database("LunaDB").Collection("Team")

@@ -87,3 +87,16 @@ func (db *DB) AddTag(id primitive.ObjectID, tag string) (*mongo.UpdateResult, er
 	}
 	return result, nil
 }
+
+func (db *DB) EditGroup(NewCollection models.Collection) (*mongo.UpdateResult, error) {
+
+	filter := bson.D{{Key: "_id", Value: NewCollection.ID}}
+
+	result, err := db.Coll.UpdateByID(context.TODO(), filter, NewCollection)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+
+}

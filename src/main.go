@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 	email "server/src/api/Email"
 	"server/src/api/db"
 	filemanagement "server/src/api/file_management"
@@ -18,7 +17,6 @@ func main() {
 	defer ctx.Done()
 
 	fmt.Println("Servers First initialisation")
-	fmt.Println(os.Getenv("MONGOURI"))
 	DB, err := db.New() // * setup datenbank
 	if err != nil {
 		helper.CustomError(err.Error())

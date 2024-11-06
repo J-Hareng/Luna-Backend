@@ -1,2 +1,8 @@
 ./vendor
 /vendor
+
+
+/.vscode
+./.vscode
+
+.makefile

@@ -78,6 +78,12 @@ func (db *DB) GetCollectionsViaGroupID(gruID string) ([]models.Collection, error
 	return collections, nil
 }
 
+func (db *DB) EditTag(tag string, col models.Collection ){
+	
+		
+}
+
+
 func (db *DB) AddTag(id primitive.ObjectID, tag string) (*mongo.UpdateResult, error) {
 	filter := bson.D{{Key: "_id", Value: id}}
 	update := bson.D{{Key: "$push", Value: bson.D{{Key: "tags", Value: tag}}}}

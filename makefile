@@ -12,4 +12,4 @@ Rdev:
 
 pC := /Users/hareng/Desktop/Luna-Frontend
 
-pS := /Users/hareng/Desktop/Luna-Backend
+pS := /home/julian/github/Luna-Backend

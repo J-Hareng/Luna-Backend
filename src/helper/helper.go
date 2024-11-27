@@ -37,7 +37,7 @@ type Status struct {
 	STATUS string
 }
 
-func CustomErrorApi(c *gin.Context, err error) {
+func CustomErrorApi(c *gin.Context, err error,) {
 	if err != nil {
 		fmt.Print("Custom error : ")
 		fmt.Println(err)

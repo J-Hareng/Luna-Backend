@@ -32,11 +32,20 @@ type FileBlob struct {
 func UploadFile(db *db.DB, s3 *filemanagement.S3Client) gin.HandlerFunc {
 
 	return func(c *gin.Context) {
+	
+		fmt.Println("Uploading file")
+		
+		
 		fileRaw, err := c.FormFile("file")
 		helper.CustomErrorApi(c, err)
+		
+		
 		name := c.PostForm("name")
+		
 		username := c.PostForm("username")
 		userId, err := primitive.ObjectIDFromHex(c.PostForm("userId"))
+		
+		
 		helper.CustomErrorApi(c, err)
 		tags := c.PostForm("tags")
 
@@ -45,14 +54,24 @@ func UploadFile(db *db.DB, s3 *filemanagement.S3Client) gin.HandlerFunc {
 
 		path := helper.RandomString(6) + fileRaw.Filename
 		file := models.CreateFile(strings.Split(tags, "§"), name, path, models.UserLink{ID: userId, NAME: username})
+       
+       
+		useridstr := c.PostForm("userId")
+		collStr := c.PostForm("coll")
+       
+       fmt.Printf("userId: %s, coll: %s\n", useridstr, collStr)
 
+		fmt.Println(c)
+		
 		_, err = db.AddFileToCollection(file, collection)
+		
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add file to collection"})
+			c.JSON(http.StatusInternalServerError,bodymodels.NewLunaResponse_ERROR("Failed to add file to collection"))
+			return	
 		}
 		src, err := fileRaw.Open()
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to open uploaded file"})
+			c.JSON(http.StatusInternalServerError, bodymodels.NewLunaResponse_ERROR("Failed to open uploaded file"))
 			return
 		}
 		defer src.Close()
@@ -60,23 +79,26 @@ func UploadFile(db *db.DB, s3 *filemanagement.S3Client) gin.HandlerFunc {
 		// Create a temporary in-memory file
 		tempFile, err := ioutil.TempFile("", "*")
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create temporary file"})
+			c.JSON(http.StatusInternalServerError, bodymodels.NewLunaResponse_ERROR("Failed to create temporary file"))
 			return
 		}
 
 		// Copy the uploaded file to the temporary file
 		_, err = io.Copy(tempFile, src)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to copy uploaded file"})
+			c.JSON(http.StatusInternalServerError, bodymodels.NewLunaResponse_ERROR("Failed to copy uploaded file"))
 			return
 		}
 		// Use the temporary file
 		err = s3.UploadFile(tempFile, path)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file to S3"})
+			c.JSON(http.StatusInternalServerError, bodymodels.NewLunaResponse_ERROR("Failed to upload file to S3"))
 			return
 		}
-		c.JSON(http.StatusOK, file)
+		
+		
+		
+		c.JSON(http.StatusOK, bodymodels.NewLunaResponse_OK(nil, "File uploaded successfully"))
 	}
 
 }
@@ -200,22 +222,26 @@ func GetFile(db *db.DB, s3 *filemanagement.S3Client) gin.HandlerFunc {
 func RemoveFile(db *db.DB, S3 *filemanagement.S3Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var val bodymodels.RemoveFileFromCollectionMod
+		
+		
 		if err := c.ShouldBindJSON(&val); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.JSON(http.StatusBadRequest, bodymodels.NewLunaResponse_ERROR(err.Error()))
 			return
 		}
+		
+		
 		err := S3.DeleteFile(val.File.Path)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete file from S3"})
+			c.JSON(http.StatusInternalServerError, bodymodels.NewLunaResponse_ERROR("Failed to delete file from S3"))
 		}
 		// Remove the file from the database
 		_, err = db.RemoveFileFromCollection(val.File, val.CollId)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to remove file from database"})
+			c.JSON(http.StatusInternalServerError, bodymodels.NewLunaResponse_ERROR("Failed to remove file from database"))
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": "File removed successfully"})
+		c.JSON(http.StatusOK,bodymodels.NewLunaResponse_OK("File removed successfully", ""))
 	}
 }
 func getContentType(ext string) string {

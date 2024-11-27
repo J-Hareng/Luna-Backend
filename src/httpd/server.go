@@ -56,6 +56,11 @@ func Init(ctx context.Context, DB *db.DB, E email.Email, EKM *security.EmailToke
 	secureGroup := r.Group("/api")             // * gruppe erstellen
 	secureGroup.Use(security.ConditionToken()) // * middleware einbinden
 	{
+		// * testAuth
+		secureGroup.GET("/testAuth", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{"message": "Hello from the server"})
+		})
+
 		// * grupmanagement
 		secureGroup.POST("/addGruopKey", handler.AddGruopKey(DB, GKM))
 		secureGroup.POST("/joinGroupViaKey", handler.JoinGruopViaKey(DB, GKM))
@@ -92,6 +97,7 @@ func Init(ctx context.Context, DB *db.DB, E email.Email, EKM *security.EmailToke
 		secureGroup.POST("/GetCollections", handler.GetCollections(DB))
 		secureGroup.POST("/RemoveCollection", handler.RemoveCollection(DB))
 		secureGroup.POST("/AddTagToCollection", handler.AddTagToCollection(DB))
+		secureGroup.POST("/EditTagInCollection", handler.EditTagFromCollection(DB))
 
 		//* Files
 		secureGroup.POST("/UploadFile", handler.UploadFile(DB, S3))

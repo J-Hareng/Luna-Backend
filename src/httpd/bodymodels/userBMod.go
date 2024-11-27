@@ -76,6 +76,12 @@ type AddTagMod struct {
 	Name   string             `json:"tag" binding:"required"`
 	CollId primitive.ObjectID `json:"collID" binding:"required"`
 }
+type EditTagMod struct {
+	Name    string             `json:"newtag" binding:"required"`
+	OldName string             `json:"oldtag" binding:"required"`
+	CollId  primitive.ObjectID `json:"collID" binding:"required"`
+}
+
 type RemoveCollectionMod struct {
 	CollId primitive.ObjectID `json:"collID" binding:"required"`
 }

@@ -69,16 +69,41 @@ func AddTagToCollection(DB *db.DB) gin.HandlerFunc {
 		var tag bodymodels.AddTagMod
 		err := c.BindJSON(&tag)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.JSON(http.StatusBadRequest, bodymodels.NewLunaResponse_ERROR_INVALID_PAYLOAD())
 			return
 		}
-		fmt.Println("Tag : ")
-		fmt.Println(tag)
 		result, err := DB.AddTag(tag.CollId, tag.Name)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.JSON(http.StatusBadRequest, bodymodels.NewLunaResponse_ERROR("Failed to add tag to collection"))
+			fmt.Println(err)
 			return
 		}
-		c.JSON(http.StatusOK, result)
+
+		if result.ModifiedCount == 0 {
+			c.JSON(http.StatusBadRequest, bodymodels.NewLunaResponse_ERROR("Failed to add tag to collection"))
+			return
+		}
+
+		c.JSON(http.StatusOK, bodymodels.NewLunaResponse_OK("Added tag to collection", ""))
+	}
+}
+
+func EditTagFromCollection(DB *db.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req bodymodels.EditTagMod
+		err := c.BindJSON(&req)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, bodymodels.NewLunaResponse_ERROR_INVALID_PAYLOAD())
+			return
+		}
+
+		res, err := DB.RemoveTagFromCollection(req.OldName, req.Name, req.CollId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, bodymodels.NewLunaResponse_ERROR(err.Error()))
+			return
+		}
+
+		c.JSON(http.StatusOK, bodymodels.NewLunaResponse_OK(res, ""))
+
 	}
 }

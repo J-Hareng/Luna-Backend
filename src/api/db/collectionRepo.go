@@ -18,6 +18,20 @@ func (db *DB) AddCollection(name string, GruID string) (*mongo.InsertOneResult, 
 	}
 	return result, nil
 }
+func (db *DB) RemoveTagFromCollection(tagOld string, tagNew string, collectionID primitive.ObjectID) (*mongo.UpdateResult, error) {
+	filter := bson.D{
+		{Key: "_id", Value: collectionID},
+		{Key: "tags", Value: bson.D{{Key: "$elemMatch", Value: bson.D{{Key: "$eq", Value: tagOld}}}}},
+	}
+
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "tags.$", Value: tagNew}}}}
+	res, err := db.Coll.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+
+}
 
 func (db *DB) AddFileToCollection(file models.File, collectionId primitive.ObjectID) (*mongo.UpdateResult, error) {
 	filter := bson.D{{Key: "_id", Value: collectionId}}

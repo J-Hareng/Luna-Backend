@@ -44,6 +44,29 @@ func RemoveTask(db *db.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, insRes)
 	}
 }
+func EditTask(db *db.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var Task models.Task
+		if err := c.ShouldBindJSON(&Task); err != nil {
+			fmt.Print(err)
+			c.JSON(http.StatusConflict, bodymodels.NewLunaResponse_ERROR("Invalid Payload"))
+			return
+		}
+
+		UpdateRes, err := db.EditTask(Task)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, bodymodels.NewLunaResponse_ERROR("Failed to update Task"))
+			return
+		}
+		if UpdateRes.MatchedCount == 0 {
+			c.JSON(http.StatusNotFound, bodymodels.NewLunaResponse_ERROR("Task not found"))
+			return
+		}
+		c.JSON(http.StatusOK, bodymodels.NewLunaResponse_OK("UpdatedTask", ""))
+
+	}
+
+}
 func AssingForTask(db *db.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var Task bodymodels.EditAssingmentForTaskMod

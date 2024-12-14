@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// * Self Manipulation
 func (db *DB) AddCollection(name string, GruID string) (*mongo.InsertOneResult, error) {
 	coll := models.CreateCollection(name, GruID)
 	result, err := db.Coll.InsertOne(context.TODO(), coll)
@@ -18,40 +19,6 @@ func (db *DB) AddCollection(name string, GruID string) (*mongo.InsertOneResult, 
 	}
 	return result, nil
 }
-func (db *DB) RemoveTagFromCollection(tagOld string, tagNew string, collectionID primitive.ObjectID) (*mongo.UpdateResult, error) {
-	filter := bson.D{
-		{Key: "_id", Value: collectionID},
-		{Key: "tags", Value: bson.D{{Key: "$elemMatch", Value: bson.D{{Key: "$eq", Value: tagOld}}}}},
-	}
-
-	update := bson.D{{Key: "$set", Value: bson.D{{Key: "tags.$", Value: tagNew}}}}
-	res, err := db.Coll.UpdateOne(context.Background(), filter, update)
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
-
-}
-
-func (db *DB) AddFileToCollection(file models.File, collectionId primitive.ObjectID) (*mongo.UpdateResult, error) {
-	filter := bson.D{{Key: "_id", Value: collectionId}}
-	update := bson.D{{Key: "$push", Value: bson.D{{Key: "files", Value: file}}}}
-	result, err := db.Coll.UpdateOne(context.TODO(), filter, update)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-func (db *DB) RemoveFileFromCollection(file models.File, collectionId primitive.ObjectID) (*mongo.UpdateResult, error) {
-	filter := bson.D{{Key: "_id", Value: collectionId}}
-	update := bson.D{{Key: "$pull", Value: bson.D{{Key: "files", Value: file}}}}
-	result, err := db.Coll.UpdateOne(context.TODO(), filter, update)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
 func (db *DB) RemoveCollection(id primitive.ObjectID) (*mongo.DeleteResult, error) {
 	filter := bson.D{{Key: "_id", Value: id}}
 	GetFullVal, err := db.GetCollection(id)
@@ -92,20 +59,29 @@ func (db *DB) GetCollectionsViaGroupID(gruID string) ([]models.Collection, error
 	return collections, nil
 }
 
-func (db *DB) EditTag(tag string, col models.Collection ){
-	
-		
-}
-
-
-func (db *DB) AddTag(id primitive.ObjectID, tag string) (*mongo.UpdateResult, error) {
-	filter := bson.D{{Key: "_id", Value: id}}
-	update := bson.D{{Key: "$push", Value: bson.D{{Key: "tags", Value: tag}}}}
+// * File Manipulation
+func (db *DB) AddFileToCollection(file models.File, collectionId primitive.ObjectID) (*mongo.UpdateResult, error) {
+	filter := bson.D{{Key: "_id", Value: collectionId}}
+	update := bson.D{{Key: "$push", Value: bson.D{{Key: "files", Value: file}}}}
 	result, err := db.Coll.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
+}
+func (db *DB) RemoveFileFromCollection(file models.File, collectionId primitive.ObjectID) (*mongo.UpdateResult, error) {
+	filter := bson.D{{Key: "_id", Value: collectionId}}
+	update := bson.D{{Key: "$pull", Value: bson.D{{Key: "files", Value: file}}}}
+	result, err := db.Coll.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// * Tag Manipulation
+func (db *DB) EditTag(tag string, col models.Collection) {
+
 }
 
 func (db *DB) EditGroup(NewCollection models.Collection) (*mongo.UpdateResult, error) {
@@ -119,4 +95,32 @@ func (db *DB) EditGroup(NewCollection models.Collection) (*mongo.UpdateResult, e
 
 	return result, nil
 
+}
+
+func (db *DB) AddTag(id primitive.ObjectID, tag string) (*mongo.UpdateResult, error) {
+	filter := bson.D{{Key: "_id", Value: id}}
+	update := bson.D{{Key: "$push", Value: bson.D{{Key: "tags", Value: tag}}}}
+	result, err := db.Coll.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+func (db *DB) RemoveTagFromCollection(tagOld string, tagNew string, collectionID primitive.ObjectID) (*models.Collection, error) {
+	filter := bson.D{
+		{Key: "_id", Value: collectionID},
+		{Key: "tags", Value: bson.D{{Key: "$elemMatch", Value: bson.D{{Key: "$eq", Value: tagOld}}}}},
+	}
+
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "tags.$", Value: tagNew}}}}
+	var updatedDoc models.Collection
+	err := db.Coll.FindOneAndUpdate(
+		context.Background(),
+		filter,
+		update,
+	).Decode(&updatedDoc)
+	if err != nil {
+		return nil, err
+	}
+	return &updatedDoc, nil
 }

@@ -50,6 +50,15 @@ func (db *DB) RemoveTasks(tasks []models.TaskLink) (*mongo.DeleteResult, error) 
 	}
 	return result, nil
 }
+func (db *DB) EditTask(task models.Task) (*mongo.UpdateResult, error) {
+	filter := bson.D{{Key: "_id", Value: task.ID}}
+	update := bson.D{{Key: "$set", Value: task}}
+	result, err := db.Task.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
 
 func (db *DB) RemoveTask(id primitive.ObjectID, tasks models.TaskLink) (*mongo.DeleteResult, error) {
 
@@ -86,6 +95,33 @@ func (db *DB) UnasingForTask(task models.TaskLink, user models.UserLink) (*mongo
 	}
 	db.UpdateUserArrays(user, "tasks", "$pull", task)
 	return result, nil
+}
+
+func (db *DB) EditTasksTags(TagNew string, tagOld string, groupID string) (*[]models.Task, error) {
+	filter := bson.D{
+		{Key: "groupid", Value: groupID},
+		{Key: "tags", Value: bson.D{{Key: "$elemMatch", Value: bson.D{{Key: "$eq", Value: tagOld}}}}},
+	}
+
+	filterForFindingIDs := bson.D{
+		{Key: "groupid", Value: groupID},
+		{Key: "tags", Value: bson.D{{Key: "$elemMatch", Value: bson.D{{Key: "$eq", Value: TagNew}}}}},
+	}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "tags.$", Value: TagNew}}}}
+	result, err := db.Task.UpdateMany(context.TODO(), filter, update)
+	if err != nil {
+		return nil, err
+	}
+	if result.MatchedCount == 0 {
+		return nil, nil
+	}
+	UpdatedTasks, err := db.FindTaskWithFilter(filterForFindingIDs)
+
+	if err != nil {
+		return nil, err
+	}
+	return UpdatedTasks, nil
+
 }
 
 func (db *DB) GetTaskArray(taskArray []models.TaskLink, ctx context.Context) ([]models.Task, error) {
@@ -165,4 +201,23 @@ func (db *DB) GetAllTasksInGroup(GroupID string) ([]models.Task, error) {
 	var task []models.Task
 	cursor.All(context.TODO(), &task)
 	return task, nil
+}
+
+func (db *DB) FindTaskWithFilter(filter primitive.D) (*[]models.Task, error) {
+	var task models.Task
+
+	cursor, err := db.Task.Find(context.TODO(), filter)
+
+	if err != nil {
+		return nil, err
+	}
+	var tasks []models.Task
+	for cursor.Next(context.TODO()) {
+		err := cursor.Decode(&task)
+		if err != nil {
+			return nil, err
+		}
+		tasks = append(tasks, task)
+	}
+	return &tasks, nil
 }

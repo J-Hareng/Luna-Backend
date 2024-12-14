@@ -46,3 +46,7 @@ type UserTaskToTeamsMod struct {
 	Team  models.TeamLink `json:"team" binding:"required"`
 	Tasks models.Task     `json:"tasks" binding:"required"`
 }
+
+type UpdatedTasksMod struct {
+	TaskLs []models.TaskLink `json:"tasks" binding:"required"`
+}

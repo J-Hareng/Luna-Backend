@@ -91,13 +91,14 @@ func Init(ctx context.Context, DB *db.DB, E email.Email, EKM *security.EmailToke
 		secureGroup.POST("/RevokeTaskApplication", handler.RemoveAssingForTask(DB))
 
 		secureGroup.POST("/GetTaskArray", handler.GetTasksArray(ctx, DB))
+		secureGroup.POST("/EditTask", handler.EditTask(DB))
 
 		//* Collections
 		secureGroup.POST("/AddCollection", handler.AddCollection(DB))
 		secureGroup.POST("/GetCollections", handler.GetCollections(DB))
 		secureGroup.POST("/RemoveCollection", handler.RemoveCollection(DB))
 		secureGroup.POST("/AddTagToCollection", handler.AddTagToCollection(DB))
-		secureGroup.POST("/EditTagInCollection", handler.EditTagFromCollection(DB))
+		secureGroup.POST("/EditTagInCollection", handler.EditTagName(DB))
 
 		//* Files
 		secureGroup.POST("/UploadFile", handler.UploadFile(DB, S3))

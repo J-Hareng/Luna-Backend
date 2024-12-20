@@ -32,16 +32,20 @@ func AddTask(db *db.DB) gin.HandlerFunc {
 func RemoveTask(db *db.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var Task bodymodels.RemoveTaskMod
+
 		if err := c.ShouldBindJSON(&Task); err != nil {
 			fmt.Print(err)
-			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			c.JSON(http.StatusConflict, bodymodels.NewLunaResponse_ERROR_INVALID_PAYLOAD())
 			return
 		}
+
 		helper.Prittylog("body", Task, "RemoveTask 1 ")
 		//! need to be checkt if admin and name already used
-		insRes, err := db.RemoveTask(Task.TeamId, Task.Tasks)
+		_, err := db.RemoveTask(Task.TeamId, Task.Tasks)
+
 		helper.CustomErrorApi(c, err)
-		c.JSON(http.StatusOK, insRes)
+
+		c.JSON(http.StatusOK, bodymodels.NewLunaResponse_OK("task removed", ""))
 	}
 }
 func EditTask(db *db.DB) gin.HandlerFunc {

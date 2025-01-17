@@ -150,3 +150,12 @@ func (db *DB) GetAllUsersInTeam(groupid string) ([]models.OtherUsers, error) {
 
 	return users, nil
 }
+func (db *DB) UpdateUserTasks(task models.Task, user models.UserLink) (*mongo.UpdateResult, error) {
+	filter := bson.D{{Key: "_id", Value: user.ID}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "tasks.$.name", Value: task.NAME}}}}
+	result, err := db.User.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}

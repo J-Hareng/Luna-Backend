@@ -152,6 +152,7 @@ func (db *DB) RemoveFromTeamArray(id primitive.ObjectID, key string, val any, pr
 	}
 	return result, nil
 }
+
 func (db *DB) RemoveFromMultibleTeamArray(key string, val any, property helper.InsertOption[string]) (*mongo.UpdateResult, error) {
 	prop := "$pull"
 	if property.Property != "" {
@@ -161,6 +162,19 @@ func (db *DB) RemoveFromMultibleTeamArray(key string, val any, property helper.I
 	update := bson.D{{Key: prop, Value: bson.D{{Key: key, Value: val}}}}
 	result, err := db.Team.UpdateMany(context.TODO(), filter, update)
 	fmt.Println(result)
+	if err != nil {
+		return nil, err
+	}
+	if result.ModifiedCount <= 0 {
+		return nil, errors.New("no documents with these properties found")
+	}
+	return result, nil
+}
+
+func (db *DB) UpdateTaskLinksName(task models.Task) (*mongo.UpdateResult, error) {
+	filter := bson.D{{Key: "_id", Value: task.TEAM.ID}, {Key: "tasks._id", Value: task.ID}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "tasks.$.name", Value: task.NAME}}}}
+	result, err := db.Team.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		return nil, err
 	}

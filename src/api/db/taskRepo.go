@@ -53,10 +53,32 @@ func (db *DB) RemoveTasks(tasks []models.TaskLink) (*mongo.DeleteResult, error) 
 func (db *DB) EditTask(task models.Task) (*mongo.UpdateResult, error) {
 	filter := bson.D{{Key: "_id", Value: task.ID}}
 	update := bson.D{{Key: "$set", Value: task}}
+
 	result, err := db.Task.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		return nil, err
 	}
+	if result.MatchedCount == 0 {
+		return nil, fmt.Errorf("no task found")
+	}
+
+	res, Teamerr := db.UpdateTaskLinksName(task)
+	if Teamerr != nil {
+		return nil, Teamerr
+	}
+	if res.ModifiedCount == 0 {
+		return nil, fmt.Errorf("no task in team found")
+	}
+	if len(task.INPROGRESS) > 0 {
+		for _, user := range task.INPROGRESS {
+			_, err = db.UpdateUserTasks(task, user)
+			if err != nil {
+				fmt.Print("Error in updating user tasks on task edit:")
+				fmt.Println(err)
+			}
+		}
+	}
+
 	return result, nil
 }
 

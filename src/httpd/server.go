@@ -41,8 +41,8 @@ func Init(ctx context.Context, DB *db.DB, E email.Email, EKM *security.EmailToke
 	})
 
 	// * WEB
-	r.Use(static.Serve("/", static.LocalFile("client", true)))
-	r.Use(static.Serve("/Dashboard", static.LocalFile("client", true)))
+	r.Use(static.Serve("/", static.LocalFile("client/browser", true)))
+	r.Use(static.Serve("/Dashboard", static.LocalFile("client/browser", true)))
 
 	// * without middleware
 	r.GET("/validateSessionToken", handler.ValidateUserToken(DB))

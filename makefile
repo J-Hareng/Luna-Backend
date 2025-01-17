@@ -10,6 +10,8 @@ Rdev:
 	cp $(pC)/src/app/const_buf_local/const.ts $(pC)/src/app && echo "pluged Local var file in"
 
 
+bsprod: 
+	make Rprod && cd $(pS) && make bs
 pC := /home/julian/Github/Luna-Frontend
 
 pS := /home/julian/Github/Luna-Backend

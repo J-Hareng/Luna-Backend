@@ -13,8 +13,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func (db *DB) AddUser(name string, email string, password string) (*mongo.InsertOneResult, error) {
-	newUser := models.CreateUser(name, email, password, "")
+func (db *DB) AddUser(name string, email string, password string, salt string) (*mongo.InsertOneResult, error) {
+	newUser := models.CreateUser(name, email, password, "", salt)
 	result, err := db.User.InsertOne(context.TODO(), newUser)
 	if err != nil {
 		return nil, err
@@ -54,6 +54,18 @@ func (db *DB) GetUser(key string, val valid_val_GetUser) (models.User, error) {
 		return models.User{}, errors.New("no user found")
 	}
 	return users[0], nil
+}
+func (db *DB) GetUserSalt(email string) (string, error) {
+	filter := bson.D{{Key: "email", Value: email}}
+	User := db.User.FindOne(context.TODO(), filter)
+	if User.Err() != nil {
+		return "", User.Err()
+	}
+	var user models.User
+	if err := User.Decode(&user); err != nil {
+		return "", err
+	}
+	return user.SALT, nil
 }
 
 // get all user
@@ -136,14 +148,14 @@ func (db *DB) UpdateUserArrays(user models.UserLink, key string, prop string, va
 	}
 	return result, nil
 }
-func (db *DB) GetAllUsersInTeam(groupid string) ([]models.OtherUsers, error) {
+func (db *DB) GetAllUsersInTeam(groupid string) ([]models.PublicUser, error) {
 	filter := bson.D{{Key: "groupid", Value: groupid}}
 	res, err := db.User.Find(context.TODO(), filter)
 	if err != nil {
 		return nil, err
 	}
 
-	var users []models.OtherUsers
+	var users []models.PublicUser
 	if err := res.All(context.TODO(), &users); err != nil {
 		return nil, err
 	}

@@ -40,7 +40,7 @@ type GetAllUserDataMod struct {
 	Collections []models.Collection `json:"collections" binding:"required"`
 	Teams       []models.Team       `json:"teams" binding:"required"`
 	UserTasks   []models.Task       `json:"tasks" binding:"required"`
-	OtherUsers  []models.OtherUsers `json:"otherusers" binding:"required"`
+	OtherUsers  []models.PublicUser `json:"otherusers" binding:"required"`
 }
 type UserTaskToTeamsMod struct {
 	Team  models.TeamLink `json:"team" binding:"required"`

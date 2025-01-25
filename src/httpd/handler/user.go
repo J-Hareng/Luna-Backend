@@ -29,6 +29,24 @@ func GetUsers(db *db.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, val) // * nuter zurück senden
 	}
 }
+func GetUserSalt(db *db.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var email struct {
+			Email string `json:"email" binding:"required"`
+		}
+		if err := c.ShouldBindJSON(&email); err != nil {
+			c.JSON(http.StatusBadRequest, bodymodels.NewLunaResponse_ERROR_INVALID_PAYLOAD())
+			return
+		}
+		salt, err := db.GetUserSalt(email.Email)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, bodymodels.NewLunaResponse_ERROR("Error while getting salt"))
+			return
+		}
+
+		c.JSON(http.StatusOK, bodymodels.NewLunaResponse_OK(salt, ""))
+	}
+}
 
 func AddUser(db *db.DB, EKM *security.EmailTokenMap) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -49,12 +67,14 @@ func AddUser(db *db.DB, EKM *security.EmailTokenMap) gin.HandlerFunc {
 			c.JSON(http.StatusConflict, gin.H{"error": "Email already used"})
 			return
 		}
+
 		if !EKM.ValidateEmail(user.Key, user.Email) {
 			c.JSON(http.StatusConflict, gin.H{"error": "Wrong validation key"})
 			return
 		}
+
 		email := strings.ToLower(user.Email)
-		db.AddUser(user.Name, email, user.Password)
+		db.AddUser(user.Name, email, user.Password, user.Salt)
 		c.JSON(http.StatusOK, user)
 	}
 }
@@ -385,7 +405,7 @@ func GetAllUserData(ctx context.Context, db *db.DB) gin.HandlerFunc {
 		defer close(teamTaskChannel)
 		defer close(teamTaskChannelOK)
 
-		UsersChannel := make(chan []models.OtherUsers)
+		UsersChannel := make(chan []models.PublicUser)
 		UsersChannelOK := make(chan bool)
 		defer close(UsersChannel)
 		defer close(UsersChannelOK)
@@ -456,7 +476,7 @@ func GetAllUserData(ctx context.Context, db *db.DB) gin.HandlerFunc {
 		var collection []models.Collection = []models.Collection{}
 		var teams []models.Team = []models.Team{}
 		var teamTask []models.Task = []models.Task{}
-		var users []models.OtherUsers = []models.OtherUsers{}
+		var users []models.PublicUser = []models.PublicUser{}
 
 		fmt.Println("wait For Go func")
 		for i := 0; i < 4; i++ {

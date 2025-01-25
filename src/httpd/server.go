@@ -50,6 +50,7 @@ func Init(ctx context.Context, DB *db.DB, E email.Email, EKM *security.EmailToke
 	r.POST("/addUser", handler.AddUser(DB, EKM))
 	r.POST("/reqSessionToken", handler.RequestSessionToken(DB))
 
+	r.POST("/getSalt", handler.GetUserSalt(DB))
 	r.POST("/reqEmailKey", handler.RequestEmailKey(E, EKM, DB))
 
 	// * With middleware

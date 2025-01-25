@@ -10,7 +10,8 @@ import (
 type AddUserMod struct {
 	Name     string `json:"name" binding:"required"`
 	Email    string `json:"email" binding:"required"`
-	Password string `json:"password" binding:"required"`
+	Password string `json:"hashPassword" binding:"required"`
+	Salt     string `json:"salt" binding:"required"`
 	Key      string `json:"key" binding:"required"`
 }
 
@@ -39,7 +40,7 @@ type GetUserTeamsMod struct {
 }
 type AddTaskMod struct {
 	Team        models.TeamLink `json:"team" binding:"required"`
-	Description string          `json:"des" binding:"required"`
+	Description string          `json:"des"`
 	Name        string          `json:"name" binding:"required"`
 	Groupid     string          `json:"groupid" binding:"required"`
 	CollID      string          `json:"collID"`

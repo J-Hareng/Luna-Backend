@@ -12,6 +12,8 @@ Rdev:
 bp: 
 	make Rprod && cd $(pC) && echo "Building..." && ng build && echo "Build Done!" && cd $(pS)
 	
-pC := /home/julian/Github/Luna-Frontend
+pC := /Users/hareng/Desktop/Luna-Frontend
 
-pS := /home/julian/Github/Luna-Backend
+# /home/julian/Github/Luna-Backend
+pS := /Users/hareng/Desktop/Luna-Backend
+# /Users/hareng/Desktop/Luna-Backend

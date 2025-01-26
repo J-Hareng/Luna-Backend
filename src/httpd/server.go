@@ -27,6 +27,8 @@ func Init(ctx context.Context, DB *db.DB, E email.Email, EKM *security.EmailToke
 
 	r := gin.Default() // * Initialisire End-Punkt
 
+	NT := handler.NewLunaNotifier()
+	NT.Start(ctx)
 	// * CORS middleware
 	r.Use(func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "localhost:4200/")
@@ -57,6 +59,9 @@ func Init(ctx context.Context, DB *db.DB, E email.Email, EKM *security.EmailToke
 	secureGroup := r.Group("/api")             // * gruppe erstellen
 	secureGroup.Use(security.ConditionToken()) // * middleware einbinden
 	{
+		//* Notifier
+		secureGroup.GET("/ConnectToSteam", handler.ConnectToNotifierStream(ctx, NT))
+
 		// * testAuth
 		secureGroup.GET("/testAuth", func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"message": "Hello from the server"})

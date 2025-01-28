@@ -8,6 +8,7 @@ import (
 	"server/src/api/db/models"
 	"server/src/helper"
 	"server/src/httpd/bodymodels"
+	"server/src/httpd/handler/stream"
 	"server/src/httpd/security"
 
 	"github.com/gin-gonic/gin"
@@ -48,7 +49,7 @@ func RemoveTask(db *db.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, bodymodels.NewLunaResponse_OK("task removed", ""))
 	}
 }
-func EditTask(db *db.DB) gin.HandlerFunc {
+func EditTask(db *db.DB, LN *stream.LunaNotifier) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var Task models.Task
 		if err := c.ShouldBindJSON(&Task); err != nil {
@@ -67,7 +68,7 @@ func EditTask(db *db.DB) gin.HandlerFunc {
 			return
 		}
 		c.JSON(http.StatusOK, bodymodels.NewLunaResponse_OK("UpdatedTask", ""))
-
+		LN.NotifieTaskUpdated(Task.GROUPID, Task.ID)
 	}
 
 }

@@ -38,6 +38,16 @@ func (db *DB) AddTask(name string, des string, team models.TeamLink, gruID strin
 	fmt.Println(updateres)
 	return result, err
 }
+func (db *DB) GetTask(id primitive.ObjectID) (*models.Task, error) {
+	filter := bson.D{{Key: "_id", Value: id}}
+	var task models.Task
+	err := db.Task.FindOne(context.TODO(), filter).Decode(&task)
+	if err != nil {
+		return nil, err
+	}
+	return &task, nil
+}
+
 func (db *DB) RemoveTasks(tasks []models.TaskLink) (*mongo.DeleteResult, error) {
 	idArray := make([]primitive.ObjectID, len(tasks))
 	for i, task := range tasks {

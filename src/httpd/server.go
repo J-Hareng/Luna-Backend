@@ -9,6 +9,7 @@ import (
 	"server/src/api/db"
 	filemanagement "server/src/api/file_management"
 	"server/src/httpd/handler"
+	"server/src/httpd/handler/stream"
 	"server/src/httpd/security"
 
 	// "github.com/gin-gonic/contrib/cors"
@@ -27,8 +28,8 @@ func Init(ctx context.Context, DB *db.DB, E email.Email, EKM *security.EmailToke
 
 	r := gin.Default() // * Initialisire End-Punkt
 
-	NT := handler.NewLunaNotifier()
-	NT.Start(ctx)
+	LN := stream.NewLunaNotifier(DB)
+	LN.Start(ctx)
 	// * CORS middleware
 	r.Use(func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "localhost:4200/")
@@ -60,7 +61,7 @@ func Init(ctx context.Context, DB *db.DB, E email.Email, EKM *security.EmailToke
 	secureGroup.Use(security.ConditionToken()) // * middleware einbinden
 	{
 		//* Notifier
-		secureGroup.GET("/ConnectToSteam", handler.ConnectToNotifierStream(ctx, NT))
+		secureGroup.GET("/ConnectToSteam", stream.ConnectToNotifierStream(ctx, LN))
 
 		// * testAuth
 		secureGroup.GET("/testAuth", func(c *gin.Context) {
@@ -97,7 +98,7 @@ func Init(ctx context.Context, DB *db.DB, E email.Email, EKM *security.EmailToke
 		secureGroup.POST("/RevokeTaskApplication", handler.RemoveAssingForTask(DB))
 
 		secureGroup.POST("/GetTaskArray", handler.GetTasksArray(ctx, DB))
-		secureGroup.POST("/EditTask", handler.EditTask(DB))
+		secureGroup.POST("/EditTask", handler.EditTask(DB, LN))
 
 		//* Collections
 		secureGroup.POST("/AddCollection", handler.AddCollection(DB))

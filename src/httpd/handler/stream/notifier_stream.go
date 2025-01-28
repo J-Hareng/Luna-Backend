@@ -1,39 +1,28 @@
-package handler
+package stream
 
 import (
 	"context"
 	"fmt"
+	"server/src/api/db"
 	"server/src/httpd/security"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type UserNotifierRef struct {
-	userID  string
-	groupID string
-}
-type NotifiType struct {
-	grupID string
-	value  NotifierBody
-}
-type NotifierBody struct {
-	Type string      `json:"type"`
-	Data interface{} `json:"data"`
-}
-
 type LunaNotifier struct {
-	NewNotifiMsg chan NotifiType
-
-	UserNotifiMsg map[UserNotifierRef]chan interface{}
-
+	NewNotifiMsg   chan NotifiType
+	UserNotifiMsg  map[UserNotifierRef]chan interface{}
 	UserDisconnect chan UserNotifierRef
+	DbRev          *db.DB
 }
 
-func NewLunaNotifier() *LunaNotifier {
+func NewLunaNotifier(db *db.DB) *LunaNotifier {
 	return &LunaNotifier{
 		NewNotifiMsg:  make(chan NotifiType),
 		UserNotifiMsg: make(map[UserNotifierRef]chan interface{}),
+		DbRev:         db,
 	}
 }
 func (LN *LunaNotifier) run(ctx context.Context) {
@@ -46,9 +35,9 @@ func (LN *LunaNotifier) run(ctx context.Context) {
 			case <-ctx.Done():
 				return
 
-			case <-time.After(30 * time.Second):
+			case <-time.After(5 * time.Second):
 
-				LN.NotifieClients("BROADCAST", "KeepAlive", "")
+				LN.NotifieClients(BROADCAST, KeepAliveOperation, NONE, NONE)
 			}
 		}
 	}()
@@ -81,9 +70,10 @@ func (LN *LunaNotifier) run(ctx context.Context) {
 func (LN *LunaNotifier) Start(ctx context.Context) {
 	go LN.run(ctx)
 }
-func (LN *LunaNotifier) NotifieClients(groupID string, t string, b interface{}) {
 
-	LN.NewNotifiMsg <- NotifiType{groupID, NotifierBody{t, b}}
+func (LN *LunaNotifier) NotifieClients(groupID string, operation string, typ string, body interface{}) {
+
+	LN.NewNotifiMsg <- NotifiType{groupID, NotifierBody{operation, typ, body}}
 
 }
 
@@ -122,6 +112,7 @@ func (LN *LunaNotifier) AddUserToSteam(ctx context.Context, c *gin.Context) {
 				c.Writer.Flush()
 
 			case <-c.Request.Context().Done():
+
 				println("User Disconnected from the server")
 				return
 
@@ -137,4 +128,29 @@ func ConnectToNotifierStream(ctx context.Context, LN *LunaNotifier) gin.HandlerF
 	return func(c *gin.Context) {
 		LN.AddUserToSteam(ctx, c)
 	}
+}
+
+// * Notifier Macros
+func (LN *LunaNotifier) NotifieAllClients(t string, b interface{}) {
+	LN.NotifieClients(BROADCAST, NONE, t, b)
+}
+
+func (LN *LunaNotifier) NotifieTaskAdded(gId string, taskID primitive.ObjectID) {
+	b, err := LN.DbRev.GetTask(taskID)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	LN.NotifieClients(gId, AddOperation, TaskObject, b)
+}
+func (LN *LunaNotifier) NotifieTaskDeleted(gId string, taskID primitive.ObjectID) {
+	LN.NotifieClients(gId, DeleteOperation, IdObjectID, taskID)
+}
+func (LN *LunaNotifier) NotifieTaskUpdated(gId string, taskID primitive.ObjectID) {
+	b, err := LN.DbRev.GetTask(taskID)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	LN.NotifieClients(gId, UpdateOperation, TaskObject, b)
 }

@@ -30,10 +30,14 @@ func AddTask(db *db.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, bodymodels.NewLunaResponse_OK("task inserted", ""))
 	}
 }
-func RemoveTask(db *db.DB) gin.HandlerFunc {
+func RemoveTask(db *db.DB, LN *stream.LunaNotifier) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var Task bodymodels.RemoveTaskMod
-
+		user, errDecode := security.DecodeUserFrom_C(c)
+		if !errDecode {
+			c.JSON(http.StatusUnauthorized, bodymodels.NewLunaResponse_ERROR("If you see this, you are doing something nouhty"))
+			return
+		}
 		if err := c.ShouldBindJSON(&Task); err != nil {
 			fmt.Print(err)
 			c.JSON(http.StatusConflict, bodymodels.NewLunaResponse_ERROR_INVALID_PAYLOAD())
@@ -47,6 +51,7 @@ func RemoveTask(db *db.DB) gin.HandlerFunc {
 		helper.CustomErrorApi(c, err)
 
 		c.JSON(http.StatusOK, bodymodels.NewLunaResponse_OK("task removed", ""))
+		LN.NotifieTaskDeleted(user.GroupID, Task.Tasks.ID)
 	}
 }
 func EditTask(db *db.DB, LN *stream.LunaNotifier) gin.HandlerFunc {

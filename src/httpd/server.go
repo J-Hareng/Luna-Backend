@@ -93,7 +93,7 @@ func Init(ctx context.Context, DB *db.DB, E email.Email, EKM *security.EmailToke
 
 		//* tasks
 		secureGroup.POST("/AddTask", handler.AddTask(DB))
-		secureGroup.POST("/RemoveTask", handler.RemoveTask(DB))
+		secureGroup.POST("/RemoveTask", handler.RemoveTask(DB, LN))
 		secureGroup.POST("/ApplyForTask", handler.AssingForTask(DB))
 		secureGroup.POST("/RevokeTaskApplication", handler.RemoveAssingForTask(DB))
 

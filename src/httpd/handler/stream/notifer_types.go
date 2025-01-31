@@ -2,9 +2,14 @@ package stream
 
 var (
 	// Operations
-	DeleteOperation    = "DELETE"
-	UpdateOperation    = "UPDATE"
-	AddOperation       = "ADD"
+	DeleteOperation = "DELETE"
+	UpdateOperation = "UPDATE"
+	AddOperation    = "ADD"
+
+	UpdateLinkOperation = "UPDATE_LINK"
+	AddLinkOperation    = "ADD_LINK"
+	RemoveLinkOperation = "REMOVE_LINK"
+
 	SyncOperation      = "SYNC"
 	KeepAliveOperation = "KeepAlive"
 

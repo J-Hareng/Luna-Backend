@@ -33,9 +33,10 @@ func (LN *LunaNotifier) run(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
+				fmt.Println("Keep Alive context done")
 				return
 
-			case <-time.After(5 * time.Second):
+			case <-time.After(10 * time.Second):
 
 				LN.NotifieClients(BROADCAST, KeepAliveOperation, NONE, NONE)
 			}
@@ -47,6 +48,9 @@ func (LN *LunaNotifier) run(ctx context.Context) {
 		case msg := <-LN.NewNotifiMsg:
 
 			for user, ch := range LN.UserNotifiMsg {
+				fmt.Println(msg.grupID)
+				fmt.Println(user)
+				fmt.Println(LN.UserNotifiMsg)
 				if user.groupID == msg.grupID || msg.grupID == "BROADCAST" {
 					ch <- msg.value
 				}
@@ -74,7 +78,6 @@ func (LN *LunaNotifier) Start(ctx context.Context) {
 func (LN *LunaNotifier) NotifieClients(groupID string, operation string, typ string, body interface{}) {
 
 	LN.NewNotifiMsg <- NotifiType{groupID, NotifierBody{operation, typ, body}}
-
 }
 
 func (LN *LunaNotifier) AddUserToSteam(ctx context.Context, c *gin.Context) {
@@ -89,6 +92,9 @@ func (LN *LunaNotifier) AddUserToSteam(ctx context.Context, c *gin.Context) {
 
 	userRef := UserNotifierRef{user.UserLink.ID.String(), user.GroupID}
 	LN.UserNotifiMsg[userRef] = ch
+	fmt.Println("User added to the stream")
+	fmt.Println(LN.UserNotifiMsg)
+	fmt.Println("-------------------")
 
 	// Set the headers for SSE
 	c.Writer.Header().Set("Content-Type", "text/event-stream")

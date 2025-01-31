@@ -410,7 +410,6 @@ func GetAllUserData(ctx context.Context, db *db.DB) gin.HandlerFunc {
 		defer close(UsersChannel)
 		defer close(UsersChannelOK)
 
-		fmt.Println("Start Go func")
 		// wg.Add(3)
 		go func() {
 			// defer wg.Done()
@@ -471,14 +470,12 @@ func GetAllUserData(ctx context.Context, db *db.DB) gin.HandlerFunc {
 			UsersChannelOK <- true
 			UsersChannel <- users
 		}()
-		fmt.Println("end Go func")
 
 		var collection []models.Collection = []models.Collection{}
 		var teams []models.Team = []models.Team{}
 		var teamTask []models.Task = []models.Task{}
 		var users []models.PublicUser = []models.PublicUser{}
 
-		fmt.Println("wait For Go func")
 		for i := 0; i < 4; i++ {
 			select {
 			case err := <-errorChannel:

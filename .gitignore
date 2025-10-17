@@ -1,7 +1,8 @@
 ./vendor
 /vendor
+client/*
 
-
+.env
 /.vscode
 ./.vscode
 
